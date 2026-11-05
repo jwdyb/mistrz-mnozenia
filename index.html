@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mistrz Mnożenia - Konkurs matematyczny</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f4f3ff',
+                            100: '#ebe9fe',
+                            200: '#d9d6fe',
+                            300: '#bdb4fe',
+                            400: '#9b87fb',
+                            500: '#6C5CE7', // Główny fiolet ze zdjęcia
+                            600: '#5a46e0',
+                            700: '#4c35c9',
+                            800: '#3f2d9e',
+                        },
+                        yellowAcc: '#FFEAA7',
+                        yellowCircle: '#FDCB6E',
+                        greenAccent: '#00b894',
+                        redAccent: '#ff7675'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F1FD;
+            user-select: none;
+        }
+
+        /* Stylizacja kółek z nagłówka */
+        .circle-badge {
+            width: 44px;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .pulse-subtle {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        /* Animacja błędu (trzęsienie) */
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Custom input focus ring */
+        .custom-input:focus {
+            outline: none;
+            border-color: #6C5CE7;
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800 antialiased selection:bg-brand-200">
+
+    <!-- Pasek górny z przyciskiem Pełny Ekran i tytułem -->
+    <header class="w-full flex justify-between items-center px-4 md:px-8 py-3 bg-brand-50/70 backdrop-blur border-b border-brand-100">
+        <div class="font-semibold text-slate-700 text-sm md:text-base flex items-center gap-2">
+            <span>🏆 Konkurs matematyczny</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Przycisk włączania / wyłączania dźwięku -->
+            <button id="soundToggleBtn" onclick="toggleSound()" class="bg-brand-100 hover:bg-brand-200 text-brand-700 font-semibold px-3 py-2 rounded-lg text-sm transition flex items-center gap-1.5 shadow-sm">
+                <span id="soundIcon">🔊</span>
+                <span id="soundText" class="hidden sm:inline">Dźwięk: WŁ</span>
+            </button>
+
+            <button id="fullscreenBtn" onclick="toggleFullscreen()" class="bg-brand-100 hover:bg-brand-200 text-brand-700 font-semibold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-sm">
+                <svg id="fsIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                <span id="fsText">Pełny ekran (F11)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- GŁÓWNY KONTENER APLIKACJI -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-brand-100 p-6 md:p-10 relative overflow-hidden transition-all duration-300">
+
+            <!-- EKRAN 1: STARTOWY -->
+            <section id="startScreen" class="flex flex-col items-center text-center space-y-6">
+                
+                <!-- Dekoration - Badge jak ze zdjęcia -->
+                <div class="flex items-center justify-center gap-3 my-2">
+                    <span class="circle-badge bg-yellowCircle text-slate-800">7</span>
+                    <span class="text-brand-500 font-black text-xl">×</span>
+                    <span class="circle-badge bg-brand-300 text-brand-900">8</span>
+                    <span class="text-brand-500 font-black text-xl">=</span>
+                    <span class="circle-badge bg-emerald-200 text-emerald-800 text-2xl">😊</span>
+                </div>
+
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-black text-brand-500 tracking-tight uppercase">Mistrz Mnożenia</h1>
+                    <p class="text-slate-500 text-sm md:text-base font-medium mt-1">Małe kroki, coraz większe sukcesy!</p>
+                </div>
+
+                <!-- Pole na Imię -->
+                <div class="w-full max-w-md space-y-2">
+                    <label for="playerName" class="block font-bold text-slate-700 text-base md:text-lg">Jak masz na imię?</label>
+                    <input type="text" id="playerName" placeholder="Wpisz swoje imię..." 
+                        class="custom-input w-full px-5 py-3.5 text-center text-lg font-semibold text-slate-800 bg-slate-50 border-2 border-brand-200 rounded-xl transition placeholder:text-slate-400 placeholder:font-normal">
+                </div>
+
+                <!-- Wybór czasu -->
+                <div class="w-full max-w-md space-y-3">
+                    <h2 class="font-bold text-slate-700 text-base md:text-lg">Wyścig z czasem</h2>
+                    <p class="text-slate-500 text-xs md:text-sm">Ile minut chcesz ćwiczyć? Wybierz swój czas.</p>
+                    
+                    <div class="grid grid-cols-5 gap-2" id="timeSelection">
+                        <button onclick="selectTime(1)" class="time-btn bg-brand-500 text-white font-bold py-2 rounded-lg shadow transition border-2 border-brand-500 text-sm" data-time="1">1 min</button>
+                        <button onclick="selectTime(2)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="2">2 min</button>
+                        <button onclick="selectTime(3)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="3">3 min</button>
+                        <button onclick="selectTime(4)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="4">4 min</button>
+                        <button onclick="selectTime(5)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="5">5 min</button>
+                        <button onclick="selectTime(6)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="6">6 min</button>
+                        <button onclick="selectTime(7)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="7">7 min</button>
+                        <button onclick="selectTime(8)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="8">8 min</button>
+                        <button onclick="selectTime(9)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="9">9 min</button>
+                        <button onclick="selectTime(10)" class="time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm" data-time="10">10 min</button>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-400 font-medium">Wpisz wynik i naciśnij Enter. Zbieraj poprawne odpowiedzi!</p>
+
+                <!-- Przyciski akcji -->
+                <div class="w-full max-w-md space-y-3 pt-2">
+                    <button onclick="startGame()" class="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white font-black text-lg rounded-xl shadow-lg shadow-brand-500/30 transition transform active:scale-98">
+                        START — zaczynamy!
+                    </button>
+                    
+                    <button onclick="showHistory()" class="w-full py-3.5 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-base rounded-xl transition border border-brand-200">
+                        Moje wyniki i historia
+                    </button>
+                </div>
+            </section>
+
+            <!-- EKRAN 2: GRA / QUIZ -->
+            <section id="gameScreen" class="hidden flex-col items-center text-center space-y-6">
+                <!-- Pasek stanu: Zegar & Punkty -->
+                <div class="w-full flex items-center justify-between bg-brand-50 px-5 py-3 rounded-2xl border border-brand-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">⏳</span>
+                        <div class="text-left">
+                            <div class="text-xs text-slate-500 font-medium">Pozostały czas</div>
+                            <div id="timerDisplay" class="text-xl font-black text-brand-700 font-mono">01:00</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="text-center">
+                            <span class="text-xs text-slate-500 font-semibold">Poprawne</span>
+                            <div id="correctCount" class="text-lg font-black text-emerald-600">0</div>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-xs text-slate-500 font-semibold">Błędy</span>
+                            <div id="wrongCount" class="text-lg font-black text-rose-500">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Działanie matematyczne -->
+                <div class="py-6 my-2 w-full flex flex-col items-center justify-center min-h-[140px] bg-slate-50 rounded-2xl border-2 border-dashed border-brand-200 relative">
+                    <div id="mathQuestion" class="text-5xl md:text-6xl font-black text-slate-800 tracking-wider">
+                        6 × 7 = ?
+                    </div>
+                    
+                    <!-- Feedback visual overlay -->
+                    <div id="feedbackBadge" class="hidden absolute bottom-2 px-4 py-1 rounded-full text-xs font-bold transition"></div>
+                </div>
+
+                <!-- Formularz odpowiedzi -->
+                <form onsubmit="submitAnswer(event)" class="w-full max-w-sm space-y-4">
+                    <input type="number" id="answerInput" inputmode="numeric" placeholder="Twój wynik..." autocomplete="off"
+                        class="custom-input w-full px-4 py-4 text-center text-3xl font-black text-brand-700 bg-white border-2 border-brand-300 rounded-2xl shadow-inner">
+
+                    <button type="submit" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg rounded-xl shadow-md transition active:scale-98">
+                        Zatwierdź (Enter) ↵
+                    </button>
+                </form>
+
+                <div class="text-xs text-slate-400">
+                    Zakres mnożenia: do 100
+                </div>
+            </section>
+
+            <!-- EKRAN 3: PODSUMOWANIE / WYNIKI -->
+            <section id="resultScreen" class="hidden flex-col items-center text-center space-y-6">
+                <div class="text-5xl animate-bounce">🎉</div>
+                
+                <div>
+                    <h2 id="congratsTitle" class="text-2xl md:text-3xl font-black text-slate-800">Świetna robota, [Imię]!</h2>
+                    <p class="text-slate-500 text-sm mt-1">Oto podsumowanie Twojego wyścigu z czasem</p>
+                </div>
+
+                <!-- Karta Statystyk (Bez punktów) -->
+                <div class="w-full bg-brand-50 rounded-2xl p-6 border border-brand-100 grid grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-brand-100 shadow-sm flex flex-col items-center justify-center">
+                        <span class="text-xs font-semibold text-slate-400 uppercase">Dokładność</span>
+                        <span id="finalAccuracy" class="text-3xl font-black text-brand-600 mt-1">0%</span>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-brand-100 shadow-sm flex flex-col items-center justify-center">
+                        <span class="text-xs font-semibold text-slate-400 uppercase">Łącznie pytań</span>
+                        <span id="finalTotal" class="text-3xl font-black text-slate-700 mt-1">0</span>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-brand-100 shadow-sm flex flex-col items-center">
+                        <span class="text-xs font-semibold text-slate-400">Poprawne odpowiedzi</span>
+                        <span id="finalCorrect" class="text-2xl font-black text-emerald-600 mt-0.5">0</span>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-brand-100 shadow-sm flex flex-col items-center">
+                        <span class="text-xs font-semibold text-slate-400">Błędne odpowiedzi</span>
+                        <span id="finalWrong" class="text-2xl font-black text-rose-500 mt-0.5">0</span>
+                    </div>
+                </div>
+
+                <div class="w-full space-y-3 pt-2">
+                    <button onclick="restartGame()" class="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white font-black text-lg rounded-xl shadow-lg shadow-brand-500/30 transition transform active:scale-98">
+                        Zagraj ponownie! 🔄
+                    </button>
+                    
+                    <button onclick="showStartScreen()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-base rounded-xl transition">
+                        Wróć do menu głównego
+                    </button>
+                </div>
+            </section>
+
+            <!-- EKRAN 4: HISTORIA WYNIKÓW -->
+            <section id="historyScreen" class="hidden flex-col items-center text-center space-y-5">
+                <h2 class="text-2xl font-black text-brand-500">Historia wyników</h2>
+                <p class="text-xs text-slate-500">Zapisano w pamięci przeglądarki wraz ze szczegółami odpowiedzi</p>
+
+                <div class="w-full max-h-72 overflow-y-auto space-y-3 pr-1" id="historyList">
+                    <!-- Dynamicznie generowana lista -->
+                </div>
+
+                <div class="w-full flex gap-3 pt-2">
+                    <button onclick="clearHistory()" class="w-1/2 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm rounded-xl transition border border-rose-200">
+                        Wyczyść historię
+                    </button>
+                    <button onclick="showStartScreen()" class="w-1/2 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm rounded-xl shadow-md transition">
+                        Wróć do menu
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- MODAL ZE SZCZEGÓŁAMI JEDNEJ SESJI -->
+    <div id="detailsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl p-6 max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl border border-brand-100">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                <h3 id="modalTitle" class="font-black text-lg text-slate-800">Szczegóły sesji</h3>
+                <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold px-2">✕</button>
+            </div>
+            
+            <div id="modalContent" class="overflow-y-auto my-4 space-y-2 pr-1 text-left text-sm">
+                <!-- Lista szczegółowych odpowiedzi -->
+            </div>
+
+            <button onclick="closeDetailsModal()" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition">
+                Zamknij
+            </button>
+        </div>
+    </div>
+
+    <!-- STOPKA PRAW AUTORSKICH -->
+    <!-- LOGIKA JAVASCRIPT -->
+    <script>
+        // Stan aplikacji
+        let selectedMinutes = 1;
+        let timer = null;
+        let timeLeft = 0;
+        let num1 = 0;
+        let num2 = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let gameActive = false;
+        let currentSessionLog = []; // Zapis każdej odpowiedzi w trwającej sesji
+        let soundEnabled = localStorage.getItem('math_master_sound') !== 'false';
+
+        // Inicjalizacja dźwięków
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSoundUI();
+        });
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('math_master_sound', soundEnabled ? 'true' : 'false');
+            updateSoundUI();
+        }
+
+        function updateSoundUI() {
+            const soundIcon = document.getElementById('soundIcon');
+            const soundText = document.getElementById('soundText');
+            if (soundEnabled) {
+                soundIcon.innerText = '🔊';
+                soundText.innerText = 'Dźwięk: WŁ';
+            } else {
+                soundIcon.innerText = '🔇';
+                soundText.innerText = 'Dźwięk: WYŁ';
+            }
+        }
+
+        // Inicjalizacja Audio Synthesizer (bez zewnętrznych plików mp3)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            try {
+                if (!audioCtx) audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'wrong') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(140, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                }
+            } catch (e) {
+                console.log("Audio error", e);
+            }
+        }
+
+        function showScreen(screenId) {
+            ['startScreen', 'gameScreen', 'resultScreen', 'historyScreen'].forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        function selectTime(minutes) {
+            selectedMinutes = minutes;
+            const buttons = document.querySelectorAll('#timeSelection .time-btn');
+            buttons.forEach(btn => {
+                const btnTime = parseInt(btn.getAttribute('data-time'));
+                if (btnTime === minutes) {
+                    btn.className = 'time-btn bg-brand-500 text-white font-bold py-2 rounded-lg shadow transition border-2 border-brand-500 text-sm';
+                } else {
+                    btn.className = 'time-btn bg-brand-50 text-brand-700 font-bold py-2 rounded-lg hover:bg-brand-100 transition border-2 border-transparent text-sm';
+                }
+            });
+        }
+
+        function showStartScreen() {
+            clearInterval(timer);
+            gameActive = false;
+            showScreen('startScreen');
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('playerName');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                nameInput.classList.add('shake', 'border-rose-400');
+                nameInput.focus();
+                setTimeout(() => nameInput.classList.remove('shake'), 400);
+                return;
+            }
+
+            nameInput.classList.remove('border-rose-400');
+
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            currentSessionLog = []; // Czyszczenie rejestru odpowiedzi
+            document.getElementById('correctCount').innerText = '0';
+            document.getElementById('wrongCount').innerText = '0';
+
+            timeLeft = selectedMinutes * 60;
+            updateTimerDisplay();
+
+            gameActive = true;
+            showScreen('gameScreen');
+
+            generateQuestion();
+            setTimeout(() => {
+                const input = document.getElementById('answerInput');
+                input.focus();
+            }, 100);
+
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timerDisplay').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function generateQuestion() {
+            num1 = Math.floor(Math.random() * 11);
+            num2 = Math.floor(Math.random() * 11);
+
+            document.getElementById('mathQuestion').innerText = `${num1} × ${num2} = ?`;
+            const input = document.getElementById('answerInput');
+            input.value = '';
+            input.focus();
+        }
+
+        function submitAnswer(e) {
+            e.preventDefault();
+            if (!gameActive) return;
+
+            const input = document.getElementById('answerInput');
+            const userAnswer = parseInt(input.value.trim());
+
+            if (isNaN(userAnswer)) return;
+
+            const correctAnswer = num1 * num2;
+            const isCorrect = (userAnswer === correctAnswer);
+            const badge = document.getElementById('feedbackBadge');
+
+            // Logowanie szczegółów tego zadania do historii
+            currentSessionLog.push({
+                question: `${num1} × ${num2}`,
+                correctAnswer: correctAnswer,
+                userAnswer: userAnswer,
+                isCorrect: isCorrect
+            });
+
+            if (isCorrect) {
+                correctAnswers++;
+                document.getElementById('correctCount').innerText = correctAnswers;
+                playSound('correct');
+
+                badge.className = "absolute bottom-2 px-4 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-300 block";
+                badge.innerText = "Dobrze! 👏";
+            } else {
+                wrongAnswers++;
+                document.getElementById('wrongCount').innerText = wrongAnswers;
+                playSound('wrong');
+
+                badge.className = "absolute bottom-2 px-4 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-300 block";
+                badge.innerText = `Źle! ${num1} × ${num2} = ${correctAnswer}`;
+            }
+
+            generateQuestion();
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            gameActive = false;
+
+            const name = document.getElementById('playerName').value.trim() || 'Uczeń';
+            const total = correctAnswers + wrongAnswers;
+            const accuracy = total > 0 ? Math.round((correctAnswers / total) * 100) : 0;
+
+            document.getElementById('congratsTitle').innerText = `Brawo, ${name}! 🎉`;
+            document.getElementById('finalAccuracy').innerText = `${accuracy}%`;
+            document.getElementById('finalTotal').innerText = total;
+            document.getElementById('finalCorrect').innerText = correctAnswers;
+            document.getElementById('finalWrong').innerText = wrongAnswers;
+
+            // Zapis pełnej sesji bez punktacji
+            saveResult({
+                id: Date.now(),
+                name: name,
+                date: new Date().toLocaleDateString('pl-PL') + ' ' + new Date().toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'}),
+                time: `${selectedMinutes} min`,
+                correct: correctAnswers,
+                wrong: wrongAnswers,
+                accuracy: accuracy,
+                details: currentSessionLog
+            });
+
+            showScreen('resultScreen');
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function saveResult(result) {
+            let history = JSON.parse(localStorage.getItem('math_master_history') || '[]');
+            history.unshift(result);
+            if (history.length > 30) history = history.slice(0, 30);
+            localStorage.setItem('math_master_history', JSON.stringify(history));
+        }
+
+        function showHistory() {
+            const history = JSON.parse(localStorage.getItem('math_master_history') || '[]');
+            const listEl = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                listEl.innerHTML = '<div class="py-8 text-slate-400 text-sm">Brak zapisanych wyników. Zagraj pierwszą grę!</div>';
+            } else {
+                listEl.innerHTML = history.map((item) => `
+                    <div class="bg-slate-50 border border-brand-100 rounded-xl p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-left text-sm">
+                        <div>
+                            <div class="font-bold text-slate-800">${escapeHtml(item.name)} <span class="text-xs font-normal text-slate-500">(${item.time})</span></div>
+                            <div class="text-xs text-slate-400">${item.date}</div>
+                        </div>
+                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                            <div class="text-right">
+                                <div class="font-bold text-slate-700 text-xs">Dokładność: <b class="text-brand-600">${item.accuracy}%</b></div>
+                                <div class="text-xs text-slate-500"><b class="text-emerald-600">${item.correct}✓</b> / <b class="text-rose-500">${item.wrong}✗</b></div>
+                            </div>
+                            <button onclick="viewSessionDetails(${item.id})" class="px-3 py-1.5 bg-brand-100 hover:bg-brand-200 text-brand-700 text-xs font-bold rounded-lg transition">
+                                Szczegóły
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            showScreen('historyScreen');
+        }
+
+        function viewSessionDetails(id) {
+            const history = JSON.parse(localStorage.getItem('math_master_history') || '[]');
+            const session = history.find(item => item.id === id);
+
+            if (!session) return;
+
+            document.getElementById('modalTitle').innerText = `Odpowiedzi: ${session.name} (${session.date})`;
+            
+            const modalContent = document.getElementById('modalContent');
+            if (!session.details || session.details.length === 0) {
+                modalContent.innerHTML = '<div class="text-slate-400 text-center py-4">Brak zarejestrowanych odpowiedzi dla tej sesji.</div>';
+            } else {
+                modalContent.innerHTML = session.details.map((q, idx) => `
+                    <div class="p-2.5 rounded-lg border flex items-center justify-between text-xs md:text-sm ${q.isCorrect ? 'bg-emerald-50/60 border-emerald-200' : 'bg-rose-50/60 border-rose-200'}">
+                        <div>
+                            <span class="font-bold text-slate-500 mr-2">#${idx + 1}</span>
+                            <span class="font-black text-slate-800">${q.question} = ${q.correctAnswer}</span>
+                        </div>
+                        <div class="font-semibold ${q.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">
+                            Wpisano: <b>${q.userAnswer}</b> ${q.isCorrect ? '✓' : `(poprawnie: ${q.correctAnswer})`}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const modal = document.getElementById('detailsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDetailsModal() {
+            const modal = document.getElementById('detailsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function clearHistory() {
+            if (confirm("Czy na pewno chcesz wyczyścić całą historię wyników?")) {
+                localStorage.removeItem('math_master_history');
+                showHistory();
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Błąd pełnego ekranu: ${err.message}`);
+                });
+                document.getElementById('fsText').innerText = "Wyjdź z pełnego ekranu";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    document.getElementById('fsText').innerText = "Pełny ekran (F11)";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
